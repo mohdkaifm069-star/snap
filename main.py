@@ -1,4 +1,4 @@
-
+import os
 from contextlib import asynccontextmanager
 
 import psycopg2
@@ -9,15 +9,16 @@ from pydantic import BaseModel, Field
 
 # PostgreSQL connection
 def get_connection():
-    return psycopg2.connect(
-        host="localhost",
-        port=5432,
-        dbname="test",
-        user="postgres",
-        password="mohdkaif",
-        connect_timeout=5
-    )
+    database_url = os.getenv("DATABASE_URL")
 
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured")
+
+    return psycopg2.connect(
+        database_url,
+        connect_timeout=10,
+        sslmode="require"
+    )
 
 # Create table when backend starts
 @asynccontextmanager
