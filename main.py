@@ -1,3 +1,4 @@
+
 import os
 from contextlib import asynccontextmanager
 
@@ -7,18 +8,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 
-# PostgreSQL connection
+# PostgreSQL connection using your URL
 def get_connection():
-    database_url = os.getenv("DATABASE_URL")
-
-    if not database_url:
-        raise RuntimeError("DATABASE_URL is not configured")
+    database_url = "postgresql://postgres:mohdkaif@localhost:5432/test"
 
     return psycopg2.connect(
         database_url,
-        connect_timeout=10,
-        sslmode="require"
+        connect_timeout=10
     )
+
 
 # Create table when backend starts
 @asynccontextmanager
@@ -38,8 +36,8 @@ async def lifespan(app: FastAPI):
         print("PostgreSQL connected. Table is ready.")
 
     except Exception as error:
-        print("Database connection error:", error)
-        raise RuntimeError("Database connection failed.") from error
+        print("Database connection error:", repr(error))
+        raise
 
     yield
     print("Backend stopped.")
@@ -60,22 +58,22 @@ app.add_middleware(
         "null"
     ],
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["Content-Type"]
 )
 
 
-# Frontend data format
 class StudentData(BaseModel):
     name_or_rollnumber: str = Field(
-        min_length=1, max_length=150
+        min_length=1,
+        max_length=150
     )
     course_category: str = Field(
-        min_length=1, max_length=100
+        min_length=1,
+        max_length=100
     )
 
 
-# Test backend
 @app.get("/")
 def home():
     return {
@@ -83,7 +81,6 @@ def home():
     }
 
 
-# Save frontend data
 @app.post("/submit")
 def submit_data(data: StudentData):
     name = data.name_or_rollnumber.strip()
@@ -116,8 +113,7 @@ def submit_data(data: StudentData):
         }
 
     except psycopg2.Error as error:
-        print("Database insert error:", error)
-
+        print("Database insert error:", repr(error))
         raise HTTPException(
             status_code=500,
             detail="Database insert failed. Check backend terminal."
