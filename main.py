@@ -6,6 +6,8 @@ import psycopg2
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from pathlib import Path
+from fastapi.responses import FileResponse
 
 def get_connection():
     database_url = os.getenv("DATABASE_URL")
@@ -76,12 +78,11 @@ class StudentData(BaseModel):
     )
 
 
+BASE_DIR = Path(__file__).resolve().parent
+
 @app.get("/")
 def home():
-    return {
-        "message": "My Project backend is running"
-    }
-
+    return FileResponse(BASE_DIR / "index.html")
 
 @app.post("/submit")
 def submit_data(data: StudentData):
