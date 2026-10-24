@@ -7,14 +7,16 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-
-# PostgreSQL connection using your URL
 def get_connection():
-    database_url = "postgresql://postgres:mohdkaif@localhost:5432/test"
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise RuntimeError("DATABASE_URL is not configured in Render")
 
     return psycopg2.connect(
         database_url,
-        connect_timeout=10
+        connect_timeout=10,
+        sslmode="require"
     )
 
 
